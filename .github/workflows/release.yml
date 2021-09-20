@@ -169,3 +169,26 @@ jobs:
           asset_path: ./synth.exe
           asset_name: synth-windows-latest-x86_64.exe
           asset_content_type: application/octet-stream
+      - id: install-wix
+        run: nuget install WiX -Version 3.11.2
+      - id: install-cargo-wix
+          cargo +nightly install cargo-wix
+      - id: copy-target
+        run: |
+          mkdir synth/target
+          mkdir synth/target/release
+          copy target/release/synth.exe synth/target/release
+      - id: wix
+        run: |
+          cd synth
+          cargo wix
+      - name: Upload Windows installer
+        id: upload-windows-installer
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release.outputs.upload_url }}
+          asset_path: ./synth/target/wix/synth-${{ steps.tag.outputs.tag }}-x86_64.msi
+          asset_name: synth-windows-latest-x86_64.msi
+          asset_content_type: application/octet-stream
